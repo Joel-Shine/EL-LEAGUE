@@ -12,7 +12,7 @@ const teamLogos = {
 };
 
 const playerImages = {
-    "P1": "bharat.jpg", "P2": "madhav.jpg",
+    "P1": "bharath.jpg", "P2": "madhav.jpg",
     "P3": "joel.jpg",   "P4": "alok.jpg",
     "P5": "niranjan.jpg", "P6": "evan.jpg",
     "P7": "gautham.jpg", "P8": "ghosh.jpg"
