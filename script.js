@@ -5,10 +5,10 @@ const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 // --- 2. Assets & Fun Facts ---
 const teamLogos = {
-    "T1": "https://github.com/Joel-Shine/EL-LEAGUE/blob/main/logos/thunderbolts.png", 
-    "T2": "https://github.com/Joel-Shine/EL-LEAGUE/blob/main/logos/genesis.png",
-    "T3": "https://github.com/Joel-Shine/EL-LEAGUE/blob/main/logos/titans.png", 
-    "T4": "https://github.com/Joel-Shine/EL-LEAGUE/blob/main/logos/blazes.png"
+    "T1": "https://joel-shine.github.io/EL-LEAGUE/logos/thunderbolts.png", 
+    "T2": "https://joel-shine.github.io/EL-LEAGUE/logos/genesis.png",
+    "T3": "https://joel-shine.github.io/EL-LEAGUE/logos/titans.png", 
+    "T4": "https://joel-shine.github.io/EL-LEAGUE/logos/blazes.png"
 };
 
 const playerImages = {
