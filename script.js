@@ -30,7 +30,7 @@ const playerBios = {
 };
 
 let appData = { teams: {}, players: {} };
-let sessionStats = {}; // NEW: Tracks only the current game on the screen
+let sessionStats = {}; 
 
 // --- 3. Authentication & Sessions ---
 const authElements = {
@@ -75,7 +75,7 @@ function showAdminPanel() {
     authElements.email.style.display = "none";
     authElements.pass.style.display = "none";
     
-    initSessionStats(); // Set the board to 0
+    initSessionStats(); 
     renderLiveScorer(); 
 }
 
@@ -109,6 +109,7 @@ function renderHeroBanner() {
 }
     
 function renderBracket() { 
+    // Reverted to using manually tracked points_for
     const sorted = Object.values(appData.teams).sort((a, b) => b.wins - a.wins || b.points_for - a.points_for); 
     if(sorted.length >= 4) { 
         document.getElementById('semi-1-team-a').innerHTML = `<img src="${teamLogos[sorted[0].id]}" class="tiny-logo" onerror="this.onerror=null; this.style.display='none'"> 1. ${sorted[0].name}`; 
@@ -121,6 +122,7 @@ function renderBracket() {
 function renderStandings() { 
     const grid = document.getElementById('standings-grid'); 
     grid.innerHTML = ''; 
+    // Reverted to using manually tracked points_for
     const standings = Object.values(appData.teams).sort((a, b) => b.wins - a.wins || b.points_for - a.points_for); 
     standings.forEach((team, index) => { 
         const card = document.createElement('div'); 
@@ -186,7 +188,6 @@ function populateDropdowns() {
     document.getElementById('override-team-select').innerHTML = teamOptions;
 }
 
-
 // --- 5. NEW LIVE SCORER LOGIC (FAST) ---
 
 const STAT_MAP = { pts: "PTS", reb: "REB", ast: "AST", blk: "BLK", stl: "STL" };
@@ -213,7 +214,6 @@ function renderLiveScorer() {
     const sortedPlayers = Object.values(appData.players).sort((a,b) => a.team_id.localeCompare(b.team_id));
 
     sortedPlayers.forEach(p => {
-        // Now pulling from sessionStats (which starts at 0) instead of cumulative p.pts
         const s = sessionStats[p.id]; 
 
         rowsHtml += `
@@ -234,7 +234,6 @@ function renderLiveScorer() {
             </div>`;
     });
 
-    // Append the NEW clear button at the bottom
     rowsHtml += `
         <div style="padding: 20px; text-align: center; border-top: 2px solid var(--border);">
             <button class="ghost-btn" onclick="clearSessionStats()" style="border-color: #ff3333; color: #ff3333; padding: 10px 20px; font-weight: bold; border-radius: 6px; cursor: pointer; text-transform: uppercase;">
@@ -268,8 +267,6 @@ function renderStatControls(pId, statName, currentSessionVal) {
 async function fastUpdate(pId, stat, change) {
     const span = document.getElementById(`val-${pId}-${stat}`);
     
-    // 1. Update the LOCAL SESSION 
-    // Removed the 0 limit! This allows negative numbers (e.g., -1) to fix past mistakes
     let currentSessionVal = sessionStats[pId][stat];
     let newSessionVal = currentSessionVal + change; 
     
@@ -278,14 +275,13 @@ async function fastUpdate(pId, stat, change) {
     span.innerText = newSessionVal;
     sessionStats[pId][stat] = newSessionVal;
     
-    // 2. Update the CUMULATIVE DB TOTAL in memory
-    // (We still keep the DB total floored at 0 so a player never has negative total career points)
     appData.players[pId][stat] = Math.max(0, (appData.players[pId][stat] || 0) + change);
     
-    // Flash effect
     if(stat==='pts') span.style.textShadow = change > 0 ? '0 0 25px var(--neon-orange)' : 'none';
 
-    // 3. Send ONLY cumulative total to Supabase
+    renderPlayerCards();
+    renderLeaderboard();
+
     try {
         const updateData = {};
         updateData[stat] = appData.players[pId][stat]; 
@@ -302,39 +298,70 @@ async function fastUpdate(pId, stat, change) {
     } catch (e) {
         console.error("Supabase sync failed:", e);
         span.style.color = '#ff3333'; 
-        alert("Sync error! Check your internet connection.");
     }
 }
 
 // --- 7. Final Log Form Submissions ---
+
+// Form 1: Manual Input with Safety Check!
 document.getElementById('team-match-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+    
     const idA = document.getElementById('team-a-select').value;
     const idB = document.getElementById('team-b-select').value;
     if (idA === idB) return alert("A team cannot play itself!");
-    if(!confirm("Log this final Win/Loss? (Live stats already saved)")) return;
 
     const sA = parseInt(document.getElementById('team-a-score').value);
     const sB = parseInt(document.getElementById('team-b-score').value);
+
+    // THE SAFETY NET: Check the math against the live board
+    const playerPtsA = Object.values(appData.players).filter(p => p.team_id === idA).reduce((sum, p) => sum + sessionStats[p.id].pts, 0);
+    const playerPtsB = Object.values(appData.players).filter(p => p.team_id === idB).reduce((sum, p) => sum + sessionStats[p.id].pts, 0);
+
+    if (sA !== playerPtsA) {
+        return alert(`Math is not mathing!\n\nYou entered ${sA} PTS for ${appData.teams[idA].name}, but their players have ${playerPtsA} PTS on the live board. Fix the stats or the score!`);
+    }
+    
+    if (sB !== playerPtsB) {
+        return alert(`Math is not mathing!\n\nYou entered ${sB} PTS for ${appData.teams[idB].name}, but their players have ${playerPtsB} PTS on the live board. Fix the stats or the score!`);
+    }
+
+    if(!confirm(`Game Over!\n\n${appData.teams[idA].name}: ${sA} PTS\n${appData.teams[idB].name}: ${sB} PTS\n\nEverything matches! Log this result and clear the board?`)) return;
+
     const submitBtn = e.target.querySelector('button');
     submitBtn.innerText = "Saving...";
 
     appData.teams[idA].points_for += sA;
     appData.teams[idB].points_for += sB;
-    if (sA > sB) { appData.teams[idA].wins += 1; appData.teams[idB].losses += 1; } 
-    else { appData.teams[idB].wins += 1; appData.teams[idA].losses += 1; }
+    
+    if (sA > sB) { 
+        appData.teams[idA].wins += 1; 
+        appData.teams[idB].losses += 1; 
+    } else if (sB > sA) { 
+        appData.teams[idB].wins += 1; 
+        appData.teams[idA].losses += 1; 
+    }
 
     await supabaseClient.from('teams').upsert([appData.teams[idA], appData.teams[idB]]);
+    
+    // Automatically clear the board for the next game
+    sessionStats = {}; 
+    initSessionStats();
+    
     renderDashboard();
+    renderLiveScorer();
+    
     e.target.reset();
-    submitBtn.innerText = "Save Win/Loss";
+    submitBtn.innerText = "Save Match & Clear Board";
 });
 
+// Form 2: Override Team Record (Restored PTS FOR)
 document.getElementById('team-override-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const tId = document.getElementById('override-team-select').value;
     if (!tId) return;
     if(!confirm(`FORCE OVERWRITE ${appData.teams[tId].name}'s record?`)) return;
+    
     const submitBtn = e.target.querySelector('button');
     submitBtn.innerText = "Overwriting...";
     
@@ -342,7 +369,11 @@ document.getElementById('team-override-form').addEventListener('submit', async (
     appData.teams[tId].losses = parseInt(document.getElementById('override-l').value);
     appData.teams[tId].points_for = parseInt(document.getElementById('override-pf').value);
     
-    await supabaseClient.from('teams').update({ wins: appData.teams[tId].wins, losses: appData.teams[tId].losses, points_for: appData.teams[tId].points_for }).eq('id', tId);
+    await supabaseClient.from('teams').update({ 
+        wins: appData.teams[tId].wins, 
+        losses: appData.teams[tId].losses,
+        points_for: appData.teams[tId].points_for 
+    }).eq('id', tId);
     
     renderDashboard();
     e.target.reset();
