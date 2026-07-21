@@ -75,7 +75,6 @@ h1 { color: var(--neon-orange); text-shadow: var(--neon-glow); text-transform: u
 .player-info { display: flex; align-items: center; gap: 15px; }
 .leaderboard-list li strong { color: var(--neon-orange); font-size: 1.3rem;}
 
-/* forms (General and Log Match) */
 .forms-container { display: flex; flex-direction: column; align-items: center; gap: 35px; width: 100%; }
 .form-section { width: 100%; padding: 40px;}
 .form-section h3 { margin-bottom: 25px; color: var(--neon-orange); font-size: 1.6rem;}
@@ -96,78 +95,18 @@ input[type="number"] { text-align: center; font-weight: bold; font-size: 1.4rem;
 .ghost-btn { background: transparent; color: var(--neon-orange); border: 2px solid var(--neon-orange); }
 .ghost-btn:hover { background: rgba(255, 106, 0, 0.15); }
 
-/* NEW LIVE SCORER CSS - Optimized for speed */
-.scorer-dashboard {
-    width: 100%;
-    max-width: 1200px;
-    background: var(--card-bg);
-    border: 2px solid var(--border);
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.scorer-row {
-    display: grid;
-    /* [Logo] [Name] | [PTS Row] [REB Row] [AST Row] [BLK Row] [STL Row] */
-    grid-template-columns: 60px 180px 2px repeat(5, 1fr);
-    align-items: center;
-    padding: 10px 20px;
-    border-bottom: 1px solid var(--border);
-    gap: 15px;
-}
-
-.scorer-row:hover { background: #161616; }
-.scorer-row.header-row { background: #000; border-bottom: 2px solid var(--border); font-weight: bold; text-transform: uppercase; color: #888; font-size: 0.9rem; padding: 15px 20px;}
-.scorer-row .divider { height: 70%; background: var(--border); }
-.scorer-row .player-info { display: flex; align-items: center; gap: 10px; font-weight: bold;}
-.scorer-row .tiny-logo { width: 35px; height: 35px; }
-
-/* Control Buttons and Display */
-.stat-control-box {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-}
-
-.stat-header { font-size: 0.8rem; color: var(--neon-orange-dim); font-weight: bold; }
-
-.controls-group {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.current-stat-value {
-    font-size: 1.8rem;
-    font-weight: bold;
-    color: var(--text-main);
-    width: 50px;
-    text-align: center;
-    font-family: 'Cascadia Code', Consolas, monospace;
-}
-
+.scorer-dashboard { width: 100%; max-width: 1200px; background: var(--card-bg); border: 2px solid var(--border); border-radius: 8px; overflow: hidden; }
+.stat-control-box { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.controls-group { display: flex; align-items: center; gap: 12px; }
+.current-stat-value { font-size: 1.8rem; font-weight: bold; color: var(--text-main); width: 50px; text-align: center; font-family: 'Cascadia Code', Consolas, monospace; }
 .pts-val { color: var(--neon-orange); text-shadow: var(--neon-glow); }
 
-.stat-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 4px;
-    border: 1px solid #333;
-    background: #000;
-    color: white;
-    font-size: 1.4rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.1s ease;
-}
-
+.stat-btn { width: 40px; height: 40px; border-radius: 4px; border: 1px solid #333; background: #000; color: white; font-size: 1.4rem; font-weight: bold; cursor: pointer; transition: all 0.1s ease; }
 .stat-btn:active { transform: scale(0.9); }
 .plus-btn { border-color: var(--neon-orange); color: var(--neon-orange); }
 .plus-btn:hover { background: var(--neon-orange); color: #000; box-shadow: var(--neon-glow); }
 .minus-btn { border-color: #ff3333; color: #ff3333; }
 .minus-btn:hover { background: #ff3333; color: white; }
-
 
 @media (max-width: 1024px) {
     body { padding: 15px; font-size: 1rem; background-size: 20px 20px; }
@@ -179,7 +118,7 @@ input[type="number"] { text-align: center; font-weight: bold; font-size: 1.4rem;
     .hero-logo-img { width: 70px; height: 70px; }
     .hype-text { font-size: 1.2rem; }
     .cards-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; }
-    .flip-card:hover .flip-card-inner { transform: rotateY(0); } /* Disable flip on mobile */
+    .flip-card:hover .flip-card-inner { transform: rotateY(0); }
     .card-img-container { border-bottom: 1px solid var(--neon-orange-dim); }
     .team-logo { width: 40px; height: 40px; }
     .team-card { flex-direction: column; gap: 15px; padding: 15px; text-align: center; }
@@ -197,22 +136,5 @@ input[type="number"] { text-align: center; font-weight: bold; font-size: 1.4rem;
     .vs-text { margin: 5px 0;}
     .stat-inputs-grid { grid-template-columns: 1fr; gap: 10px;}
     .form-section { padding: 20px;}
-    
-    /* SCORER DASHBOARD MOBILE */
-    .scorer-row {
-        grid-template-columns: 1fr; /* Single column stack */
-        gap: 15px;
-        border-bottom: 2px solid var(--border);
-        padding: 20px;
-    }
-    .scorer-row.header-row { display: none; }
-    .scorer-row .player-info { justify-content: center; font-size: 1.4rem; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
-    .scorer-row .tiny-logo { width: 50px; height: 50px; }
-    .scorer-row .divider { display: none; }
-    .stat-controls-container {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-around;
-        gap: 20px;
-    }
+    .stat-controls-container { display: flex; flex-wrap: wrap; justify-content: space-around; gap: 20px; }
 }
