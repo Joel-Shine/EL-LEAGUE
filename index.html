@@ -5,13 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EL Batch Hoops League</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Supabase Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <header>
         <div class="logo-container">
-            <svg class="neon-bball" viewBox="0 0 100 100" width="50" height="50" xmlns="http://www.w3.org/2000/svg">
+            <svg class="neon-bball" viewBox="0 0 100 100" width="80" height="80" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="50" cy="50" r="45" fill="none" stroke="var(--neon-orange)" stroke-width="4" />
                 <path d="M 5 50 Q 50 50 95 50" fill="none" stroke="#111" stroke-width="3"/>
                 <path d="M 50 5 Q 50 50 50 95" fill="none" stroke="#111" stroke-width="3"/>
@@ -21,7 +20,6 @@
             <h1>EL 2v2 League</h1>
         </div>
 
-        <!-- Real Authentication Login -->
         <div id="auth-container" class="auth-bar">
             <input type="email" id="admin-email" placeholder="Admin Email">
             <input type="password" id="admin-password" placeholder="Password">
@@ -32,31 +30,22 @@
 
     <main class="dashboard">
         
-        <!-- Hype Banner -->
+        <!-- Public Views (Hype, Cards, Stands, Bracket, Leaderboard) -->
         <section class="hero-banner">
-            <div class="hero-logos" id="hero-logos-container">
-                <!-- Populated by JS -->
-            </div>
-            <p class="hype-text">4 Teams. 1 Title. The Undisputed Basketball Duo's of the EL Batch.</p>
+            <div class="hero-logos" id="hero-logos-container"></div>
+            <p class="hype-text">4 Teams. 1 Title. The Undisputed Kings of the EL Batch.</p>
         </section>
 
-        <!-- Player Cards -->
         <section class="player-cards-section">
             <h2 class="neon-text">Player Cards</h2>
-            <div class="cards-grid" id="player-cards-grid">
-                <!-- Populated by JS -->
-            </div>
+            <div class="cards-grid" id="player-cards-grid"></div>
         </section>
 
-        <!-- Group Stage -->
         <section class="card">
             <h2 class="neon-text">Group Stage</h2>
-            <div id="standings-grid" class="standings-grid">
-                <!-- Populated by JS -->
-            </div>
+            <div id="standings-grid" class="standings-grid"></div>
         </section>
 
-        <!-- Championship Bracket -->
         <section class="bracket-section">
             <h2 class="neon-text">Championship Bracket</h2>
             <div class="bracket-container">
@@ -85,85 +74,61 @@
             </div>
         </section>
 
-        <!-- Scoring Leaders -->
         <section class="card">
-            <h2 class="neon-text">Scoring Leaders</h2>
-            <ul id="player-leaderboard" class="leaderboard-list">
-                <!-- Populated by JS -->
-            </ul>
+            <h2 class="neon-text">Scoring Leaders (PTS)</h2>
+            <ul id="player-leaderboard" class="leaderboard-list"></ul>
         </section>
 
-        <!-- The Locked Admin Zone -->
-        <div class="forms-container" id="admin-zone" style="display: none;">
-            <h2 class="neon-text" style="width: 100%; border-bottom: 1px solid var(--neon-orange); padding-bottom: 10px;">Admin Zone</h2>
+        <!-- THE NEW FAST LIVE SCORER - Restricted to Admin -->
+        <div class="admin-zone forms-container" id="admin-zone" style="display: none;">
+            <h2 class="neon-text" style="width: 100%; border-bottom: 1px solid var(--neon-orange); padding-bottom: 15px;">Admin Scorer</h2>
             
-            <!-- Form 1: Log Match -->
-            <section class="card form-section">
-                <h3>Log Match</h3>
-                <form id="team-match-form">
-                    <div class="team-select">
-                        <select id="team-a-select" required></select>
-                        <input type="number" id="team-a-score" placeholder="PTS" required>
-                    </div>
-                    <div class="vs-text">VS</div>
-                    <div class="team-select">
-                        <select id="team-b-select" required></select>
-                        <input type="number" id="team-b-score" placeholder="PTS" required>
-                    </div>
-                    <button type="submit" class="submit-btn neon-btn">Save Match</button>
-                </form>
-            </section>
+            <div id="live-scorer-dashboard" class="scorer-dashboard">
+                <p style="color: #666; text-align: center;">Loading all players...</p>
+            </div>
 
-            <!-- Form 2: Update Player Stats -->
-            <section class="card form-section">
-                <h3>Update Stats</h3>
-                <form id="player-stat-form">
-                    <p style="text-align: center; color: #888; font-size: 0.8rem; margin-bottom: 15px;">*Use negative numbers to undo mistakes (e.g. -2)*</p>
-                    <div class="team-select">
-                        <select id="player-select" required></select>
-                    </div>
-                    <div class="stat-inputs-grid">
-                        <div class="input-group">
-                            <label for="player-pts">POINTS</label>
-                            <input type="number" id="player-pts" value="0" required>
+            <!-- Existing Final Logs -->
+            <div class="final-logs forms-grid" style="margin-top: 40px;">
+                <section class="card form-section">
+                    <h3>Log Final Match Result</h3>
+                    <form id="team-match-form">
+                        <div class="team-select">
+                            <select id="team-a-select" required></select>
+                            <input type="number" id="team-a-score" placeholder="PTS" required>
                         </div>
-                        <div class="input-group">
-                            <label for="player-ast">ASSISTS</label>
-                            <input type="number" id="player-ast" value="0" required>
+                        <div class="vs-text">VS</div>
+                        <div class="team-select">
+                            <select id="team-b-select" required></select>
+                            <input type="number" id="team-b-score" placeholder="PTS" required>
                         </div>
-                        <div class="input-group">
-                            <label for="player-reb">REBOUNDS</label>
-                            <input type="number" id="player-reb" value="0" required>
-                        </div>
-                    </div>
-                    <button type="submit" class="submit-btn ghost-btn">Update Player</button>
-                </form>
-            </section>
+                        <button type="submit" class="submit-btn neon-btn">Save Win/Loss</button>
+                    </form>
+                </section>
 
-            <!-- Form 3: Emergency Override -->
-            <section class="card form-section" style="border-color: #ff3333;">
-                <h3 style="color: #ff3333;">Override Team Record</h3>
-                <form id="team-override-form">
-                    <div class="team-select">
-                        <select id="override-team-select" required></select>
-                    </div>
-                    <div class="stat-inputs-grid">
-                        <div class="input-group">
-                            <label style="color: #ff3333;">WINS</label>
-                            <input type="number" id="override-w" required>
+                <section class="card form-section" style="border-color: #ff3333;">
+                    <h3 style="color: #ff3333;">Override Team Record</h3>
+                    <form id="team-override-form">
+                        <div class="team-select">
+                            <select id="override-team-select" required></select>
                         </div>
-                        <div class="input-group">
-                            <label style="color: #ff3333;">LOSSES</label>
-                            <input type="number" id="override-l" required>
+                        <div class="stat-inputs-grid">
+                            <div class="input-group">
+                                <label style="color: #ff3333;">WINS</label>
+                                <input type="number" id="override-w" required>
+                            </div>
+                            <div class="input-group">
+                                <label style="color: #ff3333;">LOSSES</label>
+                                <input type="number" id="override-l" required>
+                            </div>
+                            <div class="input-group">
+                                <label style="color: #ff3333;">PTS FOR</label>
+                                <input type="number" id="override-pf" required>
+                            </div>
                         </div>
-                        <div class="input-group">
-                            <label style="color: #ff3333;">PTS FOR</label>
-                            <input type="number" id="override-pf" required>
-                        </div>
-                    </div>
-                    <button type="submit" class="submit-btn" style="background: #ff3333; color: white;">Force Set Record</button>
-                </form>
-            </section>
+                        <button type="submit" class="submit-btn" style="background: #ff3333; color: white;">Force Set Record</button>
+                    </form>
+                </section>
+            </div>
         </div>
     </main>
 
