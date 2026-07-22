@@ -109,7 +109,6 @@ function renderHeroBanner() {
 }
     
 function renderBracket() { 
-    // Reverted to using manually tracked points_for
     const sorted = Object.values(appData.teams).sort((a, b) => b.wins - a.wins || b.points_for - a.points_for); 
     if(sorted.length >= 4) { 
         document.getElementById('semi-1-team-a').innerHTML = `<img src="${teamLogos[sorted[0].id]}" class="tiny-logo" onerror="this.onerror=null; this.style.display='none'"> 1. ${sorted[0].name}`; 
@@ -122,7 +121,6 @@ function renderBracket() {
 function renderStandings() { 
     const grid = document.getElementById('standings-grid'); 
     grid.innerHTML = ''; 
-    // Reverted to using manually tracked points_for
     const standings = Object.values(appData.teams).sort((a, b) => b.wins - a.wins || b.points_for - a.points_for); 
     standings.forEach((team, index) => { 
         const card = document.createElement('div'); 
@@ -145,13 +143,14 @@ function renderStandings() {
 function renderPlayerCards() {
     const grid = document.getElementById('player-cards-grid');
     grid.innerHTML = '';
+    
     Object.values(appData.players).forEach(p => {
-        const team = appData.teams[p.team_id];
-        const games = team.wins + team.losses;
-        const avg = (val) => games > 0 ? (val / games).toFixed(1) : "0.0";
-
         let card = document.createElement('div'); 
         card.className = 'flip-card';
+        
+        // NEW: Tells the card to toggle a "flipped" CSS class when tapped
+        card.setAttribute('onclick', "this.classList.toggle('flipped')");
+        
         card.innerHTML = `
             <div class="flip-card-inner">
                 <div class="flip-card-front">
@@ -159,8 +158,8 @@ function renderPlayerCards() {
                     <div class="card-stats-banner">
                         <div class="card-name">${p.name.split(' ')[0]}</div>
                         <div class="card-stat-row">
-                            <div class="major-stats"><span>PTS ${avg(p.pts)}</span> <span>REB ${avg(p.reb)}</span> <span>AST ${avg(p.ast)}</span></div>
-                            <div class="defensive-stats" style="color: #666; margin-top: 5px;"><span>BLK ${avg(p.blk||0)}</span> <span>STL ${avg(p.stl||0)}</span></div>
+                            <div class="major-stats"><span>PTS ${p.pts}</span> <span>REB ${p.reb}</span> <span>AST ${p.ast}</span></div>
+                            <div class="defensive-stats" style="color: #666; margin-top: 8px;"><span>BLK ${p.blk||0}</span> <span>STL ${p.stl||0}</span></div>
                         </div>
                     </div>
                 </div>
@@ -173,10 +172,24 @@ function renderPlayerCards() {
 function renderLeaderboard() {
     const list = document.getElementById('player-leaderboard');
     list.innerHTML = '';
-    const topScorers = Object.values(appData.players).sort((a, b) => b.pts - a.pts).slice(0, 8);
+    
+    // THE NEW MVP SORTING ALGORITHM: PTS -> AST -> REB
+    const topScorers = Object.values(appData.players).sort((a, b) => {
+        if (b.pts !== a.pts) return b.pts - a.pts; // 1st Check: Points
+        if (b.ast !== a.ast) return b.ast - a.ast; // 2nd Check: Assists
+        return b.reb - a.reb;                      // 3rd Check: Rebounds
+    }).slice(0, 8);
+
     topScorers.forEach(p => {
         const li = document.createElement('li');
-        li.innerHTML = `<div class="player-info"><img src="${teamLogos[p.team_id]}" class="tiny-logo" onerror="this.onerror=null; this.style.display='none'"> <strong>${p.name.split(' ')[0]}</strong></div> <span>${p.pts} PTS (${appData.teams[p.team_id].wins + appData.teams[p.team_id].losses}G)</span>`;
+        li.innerHTML = `
+            <div class="player-info">
+                <img src="${teamLogos[p.team_id]}" class="tiny-logo" onerror="this.onerror=null; this.style.display='none'"> 
+                <strong>${p.name.split(' ')[0]}</strong>
+            </div> 
+            <span style="color: #aaa; font-size: 1rem; font-weight: bold; letter-spacing: 1px;">
+                <span style="color: var(--neon-orange); font-size: 1.2rem;">${p.pts} PTS</span> | ${p.ast} AST | ${p.reb} REB
+            </span>`;
         list.appendChild(li);
     });
 }
@@ -186,9 +199,12 @@ function populateDropdowns() {
     document.getElementById('team-a-select').innerHTML = teamOptions;
     document.getElementById('team-b-select').innerHTML = teamOptions;
     document.getElementById('override-team-select').innerHTML = teamOptions;
+
+    const playerOptions = `<option value="">Select Player...</option>` + Object.values(appData.players).map(p => `<option value="${p.id}">${p.name} (${appData.teams[p.team_id].name})</option>`).join('');
+    document.getElementById('override-player-select').innerHTML = playerOptions;
 }
 
-// --- 5. NEW LIVE SCORER LOGIC (FAST) ---
+// --- 5. LIVE SCORER LOGIC (PURE COLUMN FORMAT) ---
 
 const STAT_MAP = { pts: "PTS", reb: "REB", ast: "AST", blk: "BLK", stl: "STL" };
 
@@ -216,15 +232,16 @@ function renderLiveScorer() {
     sortedPlayers.forEach(p => {
         const s = sessionStats[p.id]; 
 
+        // THE PLAYER ROW IS NOW A STRICT VERTICAL COLUMN
         rowsHtml += `
-            <div class="scorer-row" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; padding: 20px; border-bottom: 1px solid #222; gap: 20px;">
+            <div class="scorer-row" style="display: flex; flex-direction: column; align-items: center; padding: 25px 20px; border-bottom: 2px solid var(--border); gap: 20px;">
                 
-                <div style="display: flex; align-items: center; gap: 15px; min-width: 150px;">
-                    <img src="${teamLogos[p.team_id]}" class="tiny-logo" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${p.name.charAt(0)}&background=ff6a00&color=000&bold=true'">
-                    <div class="player-info" style="font-size: 1.3rem; font-weight: bold; color: var(--text-main);">${p.name.split(' ')[0]}</div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                    <img src="${teamLogos[p.team_id]}" class="team-logo" style="width: 70px; height: 70px;" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${p.name.charAt(0)}&background=ff6a00&color=000&bold=true'">
+                    <div class="player-info" style="font-size: 1.6rem; font-weight: bold; color: var(--text-main); text-transform: uppercase;">${p.name.split(' ')[0]}</div>
                 </div>
                 
-                <div class="stat-controls-container" style="display: flex; flex-wrap: wrap; justify-content: space-around; flex: 1; gap: 15px; min-width: 300px;">
+                <div class="stat-controls-container" style="display: flex; flex-direction: column; width: 100%; max-width: 400px; gap: 12px;">
                     ${renderStatControls(p.id, 'pts', s.pts)}
                     ${renderStatControls(p.id, 'reb', s.reb)}
                     ${renderStatControls(p.id, 'ast', s.ast)}
@@ -235,8 +252,8 @@ function renderLiveScorer() {
     });
 
     rowsHtml += `
-        <div style="padding: 20px; text-align: center; border-top: 2px solid var(--border);">
-            <button class="ghost-btn" onclick="clearSessionStats()" style="border-color: #ff3333; color: #ff3333; padding: 10px 20px; font-weight: bold; border-radius: 6px; cursor: pointer; text-transform: uppercase;">
+        <div style="padding: 20px; text-align: center;">
+            <button class="ghost-btn" onclick="clearSessionStats()" style="border-color: #ff3333; color: #ff3333; padding: 15px 30px; font-weight: bold; border-radius: 6px; cursor: pointer; text-transform: uppercase;">
                 Reset Board For New Game
             </button>
         </div>
@@ -247,14 +264,15 @@ function renderLiveScorer() {
 
 function renderStatControls(pId, statName, currentSessionVal) {
     const spanId = `val-${pId}-${statName}`;
+    // EACH STAT BOX KEEPS THE ROW [LABEL | - 0 +] BUT STRETCHES WIDE TO STACK PERFECTLY IN THE COLUMN
     return `
-        <div class="stat-control-box" style="display: flex; flex-direction: row; align-items: center; gap: 12px; background: #050505; padding: 8px 15px; border-radius: 8px; border: 1px solid #222;">
+        <div class="stat-control-box" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; background: #050505; padding: 10px 20px; border-radius: 8px; border: 1px solid #222; width: 100%;">
             
-            <div class="stat-header" style="width: 35px; text-align: left; font-size: 0.95rem; font-weight: bold; color: var(--neon-orange-dim);">
+            <div class="stat-header" style="font-size: 1.1rem; font-weight: bold; color: var(--neon-orange-dim); width: 50px;">
                 ${STAT_MAP[statName]}
             </div>
             
-            <div class="controls-group" style="display: flex; align-items: center; gap: 10px;">
+            <div class="controls-group" style="display: flex; align-items: center; gap: 15px;">
                 <button class="stat-btn minus-btn" onclick="fastUpdate('${pId}', '${statName}', -1)">-</button>
                 <span id="${spanId}" class="current-stat-value ${statName==='pts'?'pts-val':''}">${currentSessionVal}</span>
                 <button class="stat-btn plus-btn" onclick="fastUpdate('${pId}', '${statName}', 1)">+</button>
@@ -263,7 +281,7 @@ function renderStatControls(pId, statName, currentSessionVal) {
         </div>`;
 }
 
-// --- 6. THE FAST LIVE UPDATE ENGINE ---
+// --- 6. LIVE UPDATE ENGINE ---
 async function fastUpdate(pId, stat, change) {
     const span = document.getElementById(`val-${pId}-${stat}`);
     
@@ -301,9 +319,9 @@ async function fastUpdate(pId, stat, change) {
     }
 }
 
-// --- 7. Final Log Form Submissions ---
+// --- 7. FINAL LOG FORMS ---
 
-// Form 1: Manual Input with Safety Check!
+// Form 1: Manual Input with Math Verification
 document.getElementById('team-match-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -314,17 +332,11 @@ document.getElementById('team-match-form').addEventListener('submit', async (e) 
     const sA = parseInt(document.getElementById('team-a-score').value);
     const sB = parseInt(document.getElementById('team-b-score').value);
 
-    // THE SAFETY NET: Check the math against the live board
     const playerPtsA = Object.values(appData.players).filter(p => p.team_id === idA).reduce((sum, p) => sum + sessionStats[p.id].pts, 0);
     const playerPtsB = Object.values(appData.players).filter(p => p.team_id === idB).reduce((sum, p) => sum + sessionStats[p.id].pts, 0);
 
-    if (sA !== playerPtsA) {
-        return alert(`Math is not mathing!\n\nYou entered ${sA} PTS for ${appData.teams[idA].name}, but their players have ${playerPtsA} PTS on the live board. Fix the stats or the score!`);
-    }
-    
-    if (sB !== playerPtsB) {
-        return alert(`Math is not mathing!\n\nYou entered ${sB} PTS for ${appData.teams[idB].name}, but their players have ${playerPtsB} PTS on the live board. Fix the stats or the score!`);
-    }
+    if (sA !== playerPtsA) return alert(`Math is not mathing!\n\nYou entered ${sA} PTS for ${appData.teams[idA].name}, but their players have ${playerPtsA} PTS on the live board. Fix the stats or the score!`);
+    if (sB !== playerPtsB) return alert(`Math is not mathing!\n\nYou entered ${sB} PTS for ${appData.teams[idB].name}, but their players have ${playerPtsB} PTS on the live board. Fix the stats or the score!`);
 
     if(!confirm(`Game Over!\n\n${appData.teams[idA].name}: ${sA} PTS\n${appData.teams[idB].name}: ${sB} PTS\n\nEverything matches! Log this result and clear the board?`)) return;
 
@@ -344,7 +356,6 @@ document.getElementById('team-match-form').addEventListener('submit', async (e) 
 
     await supabaseClient.from('teams').upsert([appData.teams[idA], appData.teams[idB]]);
     
-    // Automatically clear the board for the next game
     sessionStats = {}; 
     initSessionStats();
     
@@ -355,7 +366,37 @@ document.getElementById('team-match-form').addEventListener('submit', async (e) 
     submitBtn.innerText = "Save Match & Clear Board";
 });
 
-// Form 2: Override Team Record (Restored PTS FOR)
+// Form 2: Player Override
+document.getElementById('player-override-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const pId = document.getElementById('override-player-select').value;
+    if (!pId) return;
+    
+    if(!confirm(`FORCE OVERWRITE ${appData.players[pId].name}'s stats?`)) return;
+
+    const submitBtn = e.target.querySelector('button');
+    submitBtn.innerText = "Overwriting...";
+
+    const pts = parseInt(document.getElementById('override-p-pts').value);
+    const reb = parseInt(document.getElementById('override-p-reb').value);
+    const ast = parseInt(document.getElementById('override-p-ast').value);
+    const blk = parseInt(document.getElementById('override-p-blk').value);
+    const stl = parseInt(document.getElementById('override-p-stl').value);
+
+    appData.players[pId].pts = pts;
+    appData.players[pId].reb = reb;
+    appData.players[pId].ast = ast;
+    appData.players[pId].blk = blk;
+    appData.players[pId].stl = stl;
+
+    await supabaseClient.from('players').update({ pts, reb, ast, blk, stl }).eq('id', pId);
+
+    renderDashboard();
+    e.target.reset();
+    submitBtn.innerText = "Force Set Player";
+});
+
+// Form 3: Team Override
 document.getElementById('team-override-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const tId = document.getElementById('override-team-select').value;
