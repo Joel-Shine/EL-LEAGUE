@@ -73,11 +73,10 @@
         </section>
 
         <section class="card">
-            <h2 class="neon-text">Scoring Leaders (PTS)</h2>
+            <h2 class="neon-text">MVP Ladder</h2>
             <ul id="player-leaderboard" class="leaderboard-list"></ul>
         </section>
 
-        <!-- THE FAST LIVE SCORER -->
         <div class="admin-zone forms-container" id="admin-zone" style="display: none;">
             <h2 class="neon-text" style="width: 100%; border-bottom: 1px solid var(--neon-orange); padding-bottom: 15px;">Admin Scorer</h2>
             
@@ -85,8 +84,10 @@
                 <p style="color: #666; text-align: center;">Loading all players...</p>
             </div>
 
-            <!-- Final Logs (With Safety Net) -->
+            <!-- ALL FORMS NOW STACKED COLUMN-WISE -->
             <div class="final-logs forms-grid" style="margin-top: 40px;">
+                
+                <!-- Match Logger -->
                 <section class="card form-section">
                     <h3>Log Final Match Result</h3>
                     <p style="text-align: center; color: #aaa; font-size: 0.9rem; margin-bottom: 15px;">Requires exact match with live player stats.</p>
@@ -106,6 +107,41 @@
                     </form>
                 </section>
 
+                <!-- Player Override (Fully vertical) -->
+                <section class="card form-section" style="border-color: #ff3333;">
+                    <h3 style="color: #ff3333;">Override Player Stats</h3>
+                    <form id="player-override-form">
+                        <div class="team-select">
+                            <select id="override-player-select" required></select>
+                        </div>
+                        
+                        <div class="stat-inputs-grid">
+                            <div class="input-group">
+                                <label style="color: #ff3333;">PTS</label>
+                                <input type="number" id="override-p-pts" required>
+                            </div>
+                            <div class="input-group">
+                                <label style="color: #ff3333;">REB</label>
+                                <input type="number" id="override-p-reb" required>
+                            </div>
+                            <div class="input-group">
+                                <label style="color: #ff3333;">AST</label>
+                                <input type="number" id="override-p-ast" required>
+                            </div>
+                            <div class="input-group">
+                                <label style="color: #ff3333;">BLK</label>
+                                <input type="number" id="override-p-blk" required>
+                            </div>
+                            <div class="input-group">
+                                <label style="color: #ff3333;">STL</label>
+                                <input type="number" id="override-p-stl" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="submit-btn" style="background: #ff3333; color: white;">Force Set Player</button>
+                    </form>
+                </section>
+
+                <!-- Team Override -->
                 <section class="card form-section" style="border-color: #ff3333;">
                     <h3 style="color: #ff3333;">Override Team Record</h3>
                     <form id="team-override-form">
@@ -126,9 +162,10 @@
                                 <input type="number" id="override-pf" required>
                             </div>
                         </div>
-                        <button type="submit" class="submit-btn" style="background: #ff3333; color: white;">Force Set Record</button>
+                        <button type="submit" class="submit-btn" style="background: #ff3333; color: white;">Force Set Team</button>
                     </form>
                 </section>
+
             </div>
         </div>
     </main>
